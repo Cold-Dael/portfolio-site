@@ -3,32 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mon Portfolio</title>
+    <title>Cold-Dael | Portfolio</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Salut, je suis Daël 👋</h1>
+    <div class="grid"></div>
 
-    <p>
-        Étudiante passionnée par le développement web et les nouvelles technologies.
-    </p>
+    <header class="navbar">
+        <p class="logo">Cold-Dael<span>.dev</span></p>
 
-    <h2>Mes compétences</h2>
+        <nav>
+            <a href="#about">À propos</a>
+            <a href="#skills">Compétences</a>
+            <a href="#projects">Projets</a>
+            <a href="#contact">Contact</a>
+        </nav>
+    </header>
 
-    <ul>
-        <li>HTML</li>
-        <li>CSS</li>
-        <li>JavaScript</li>
-        <li>Git</li>
-        <li>GitHub</li>
-    </ul>
+    <main>
+        <section class="hero">
+            <p class="status">● SYSTEM ONLINE</p>
 
-    <h2>Mes projets</h2>
+            <h1>Cold-Dael</h1>
 
-    <ul>
-        <li>Portfolio personnel</li>
-        <li>Calculatrice (à venir)</li>
-        <li>To-Do List (à venir)</li>
-    </ul>
+            <h2>Je construis mon univers entre code, design et énergie cyber.</h2>
+
+            <p class="intro">
+                Je transforme des idées en expériences numériques, Chaque projet est une nouvelle 
+                expérimentation : imaginer, construire, améliorer, recommencer.
+            </p>
+
+            <div class="hero-buttons">
+                <a href="#projects">Voir mes projets</a>
+                <a href="https://github.com/Cold-Dael" target="_blank">GitHub</a>
+            </div>
+        </section>
+
+        <section class="panel" id="about">
+            <p class="section-label">01 — PROFILE</p>
+            <h2>À propos</h2>
+
+            <p>
+                Mon objectif est de progresser projet après projet, en construisant
+                des sites utiles, bien structurés et avec de vraies ambitions.
+                Ce portfolio évoluera avec mon niveau.
+            </p>
+        </section>
+
+        <section class="panel" id="skills">
+            <p class="section-label">02 — STACK</p>
+            <h2>Compétences</h2>
+
+            <div class="skills">
+                <span>HTML</span>
+                <span>CSS</span>
+                <span>JavaScript</span>
+                <span>Git</span>
+                <span>GitHub</span>
+            </div>
+        </section>
+
+        <section class="panel" id="projects">
+            <p class="section-label">03 — PROJECTS</p>
+            <h2>Projets</h2>
+
+            <div class="projects">
+                <article>
+                    <p class="project-number">PROJECT_01</p>
+                    <h3>Portfolio personnel</h3>
+                    <p>Un site vitrine pour présenter mon univers et mes projets.</p>
+                    <span>HTML / CSS</span>
+                </article>
+
+                <article>
+                    <p class="project-number">PROJECT_02</p>
+                    <h3>Calculatrice</h3>
+                    <p>Une calculatrice interactive pour pratiquer JavaScript.</p>
+                    <span>À venir</span>
+                </article>
+
+                <article>
+                    <p class="project-number">PROJECT_03</p>
+                    <h3>To-Do List</h3>
+                    <p>Une application de gestion de tâches simple et efficace.</p>
+                    <span>À venir</span>
+                </article>
+            </div>
+        </section>
+
+        <section class="panel" id="contact">
+            <p class="section-label">04 — NETWORK</p>
+            <h2>Contact</h2>
+
+            <p>
+                Tu peux retrouver mes projets sur GitHub.
+            </p>
+
+            <a class="contact-link" href="https://github.com/Cold-Dael" target="_blank">
+                github.com/Cold-Dael
+            </a>
+        </section>
+    </main>
 </body>
 </html>
