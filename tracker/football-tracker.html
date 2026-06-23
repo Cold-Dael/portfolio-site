@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Football Tracker — PROJECT_03</title>
+  <meta name="description" content="Tracker de stats football personnel et équipe — projet de progression.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Sora:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #070b16;
+      --grid-line: #10182e;
+      --surface: #0e1428;
+      --surface-2: #141c38;
+      --border: #26305a;
+      --border-soft: #1a2342;
+      --text: #e8ecf8;
+      --text-dim: #717ea8;
+      --text-dimmer: #475078;
+      --blue: #5b9bf5;
+      --violet: #a78bfa;
+      --green: #34d399;
+      --amber: #fbbf24;
+      --red: #f87171;
+      --accent: #5b9bf5;
+    }
+
+    body {
+      font-family: 'Sora', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      background-image:
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border-soft);
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(7,11,22,0.85);
+      backdrop-filter: blur(8px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--blue);
+      letter-spacing: 0.1em;
+    }
+
+    .header-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dimmer);
+      letter-spacing: 0.08em;
+    }
+
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem;
+    }
+
+    h1 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.25rem;
+    }
+
+    h1 span { color: var(--blue); }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--text-dim);
+      margin-bottom: 2rem;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--border-soft);
+      padding-bottom: 0;
+    }
+
+    .tab {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      padding: 10px 20px;
+      border: 1px solid transparent;
+      border-bottom: none;
+      background: transparent;
+      color: var(--text-dimmer);
+      cursor: pointer;
+      border-radius: 6px 6px 0 0;
+      transition: all 0.2s;
+    }
+
+    .tab:hover { color: var(--text-dim); background: var(--surface); }
+
+    .tab.active {
+      background: var(--surface);
+      color: var(--blue);
+      border-color: var(--border-soft);
+      border-bottom-color: var(--surface);
+      margin-bottom: -1px;
+    }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 600px) {
+      .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .metric {
+      background: var(--surface);
+      border: 1px solid var(--border-soft);
+      border-radius: 10px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+
+    .metric-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dimmer);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .metric-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 30px;
+      font-weight: 700;
+      color: var(--blue);
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border-soft);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .card-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dimmer);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 1.25rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .form-row { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+    .form-group label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.06em;
+    }
+
+    .form-group input {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 14px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus { border-color: var(--blue); }
+    .form-group input::placeholder { color: var(--text-dimmer); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 24px;
+      border: 1px solid var(--blue);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--blue);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn:hover { background: rgba(91,155,245,0.1); }
+
+    .match-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .match-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-soft);
+      border-radius: 8px;
+    }
+
+    .match-left { display: flex; align-items: center; gap: 12px; }
+
+    .match-score {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .match-opp { font-size: 13px; color: var(--text-dim); }
+
+    .badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .badge-win { background: rgba(52,211,153,0.12); color: var(--green); border: 1px solid rgba(52,211,153,0.3); }
+    .badge-draw { background: rgba(251,191,36,0.12); color: var(--amber); border: 1px solid rgba(251,191,36,0.3); }
+    .badge-loss { background: rgba(248,113,113,0.12); color: var(--red); border: 1px solid rgba(248,113,113,0.3); }
+
+    .match-right { display: flex; align-items: center; gap: 12px; }
+
+    .match-date {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dimmer);
+    }
+
+    .btn-delete {
+      background: transparent;
+      border: none;
+      color: var(--text-dimmer);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px;
+      line-height: 1;
+      transition: color 0.2s;
+    }
+
+    .btn-delete:hover { color: var(--red); }
+
+    .bar-wrap { margin-bottom: 12px; }
+
+    .bar-header {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+    }
+
+    .bar-bg {
+      height: 6px;
+      background: var(--surface-2);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: var(--blue);
+      border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 2.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-dimmer);
+    }
+
+    .my-stats-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    .my-stat-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--violet);
+      background: rgba(167,139,250,0.1);
+      border: 1px solid rgba(167,139,250,0.2);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--surface-2);
+      border: 1px solid var(--green);
+      color: var(--green);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      padding: 10px 18px;
+      border-radius: 8px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">COLD-DAEL / FOOTBALL_TRACKER</div>
+  <div class="header-tag">PROJECT_03</div>
+</header>
+
+<main>
+  <h1>Football <span>Tracker</span></h1>
+  <p class="subtitle">Tes stats perso + résultats de l'équipe, match par match.</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('moi')">MES STATS</button>
+    <button class="tab" onclick="switchTab('equipe')">MON ÉQUIPE</button>
+    <button class="tab" onclick="switchTab('ajouter')">+ AJOUTER</button>
+  </div>
+
+  <!-- MES STATS -->
+  <div id="sec-moi" class="section active">
+    <div class="grid-4">
+      <div class="metric"><div class="metric-label">Matchs</div><div class="metric-value" id="m-played">0</div></div>
+      <div class="metric"><div class="metric-label">Buts</div><div class="metric-value" id="m-goals">0</div></div>
+      <div class="metric"><div class="metric-label">Passes</div><div class="metric-value" id="m-assists">0</div></div>
+      <div class="metric"><div class="metric-label">Note moy.</div><div class="metric-value" id="m-rating">—</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Buts — 5 derniers matchs</div>
+      <div id="my-bars"><div class="empty">// Aucun match enregistré</div></div>
+    </div>
+  </div>
+
+  <!-- ÉQUIPE -->
+  <div id="sec-equipe" class="section">
+    <div class="grid-4">
+      <div class="metric"><div class="metric-label">Matchs</div><div class="metric-value" id="t-played">0</div></div>
+      <div class="metric"><div class="metric-label">Victoires</div><div class="metric-value" id="t-wins">0</div></div>
+      <div class="metric"><div class="metric-label">Buts marqués</div><div class="metric-value" id="t-scored">0</div></div>
+      <div class="metric"><div class="metric-label">Buts encaissés</div><div class="metric-value" id="t-conceded">0</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Historique des matchs</div>
+      <div class="match-list" id="match-list"><div class="empty">// Aucun match enregistré</div></div>
+    </div>
+  </div>
+
+  <!-- AJOUTER -->
+  <div id="sec-ajouter" class="section">
+    <div class="card">
+      <div class="card-title">Infos du match</div>
+      <div class="form-row">
+        <div class="form-group"><label>Adversaire</label><input id="f-opponent" placeholder="ex: FC Lyon" /></div>
+        <div class="form-group"><label>Buts marqués</label><input id="f-scored" type="number" min="0" placeholder="0" /></div>
+        <div class="form-group"><label>Buts encaissés</label><input id="f-conceded" type="number" min="0" placeholder="0" /></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Mes stats personnelles</div>
+      <div class="form-row">
+        <div class="form-group"><label>Buts</label><input id="f-goals" type="number" min="0" placeholder="0" /></div>
+        <div class="form-group"><label>Passes décisives</label><input id="f-assists" type="number" min="0" placeholder="0" /></div>
+        <div class="form-group"><label>Note /10</label><input id="f-rating" type="number" min="0" max="10" step="0.5" placeholder="7" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Tirs</label><input id="f-shots" type="number" min="0" placeholder="0" /></div>
+        <div class="form-group"><label>Tirs cadrés</label><input id="f-shotsot" type="number" min="0" placeholder="0" /></div>
+        <div class="form-group"><label>Duels gagnés</label><input id="f-duels" type="number" min="0" placeholder="0" /></div>
+      </div>
+    </div>
+    <button class="btn" onclick="addMatch()">✓ ENREGISTRER LE MATCH</button>
+  </div>
+</main>
+
+<div class="toast" id="toast">Match enregistré !</div>
+
+<script>
+  let matches = JSON.parse(localStorage.getItem('fb-tracker-matches') || '[]');
+
+  function switchTab(t) {
+    document.querySelectorAll('.tab').forEach((el, i) => {
+      el.classList.toggle('active', ['moi','equipe','ajouter'][i] === t);
+    });
+    document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+    document.getElementById('sec-' + t).classList.add('active');
+    if (t === 'moi') renderMy();
+    if (t === 'equipe') renderTeam();
+  }
+
+  function result(m) {
+    if (m.scored > m.conceded) return 'win';
+    if (m.scored === m.conceded) return 'draw';
+    return 'loss';
+  }
+
+  function addMatch() {
+    const opp = document.getElementById('f-opponent').value.trim();
+    if (!opp) { alert('Indique l\'adversaire'); return; }
+    const m = {
+      opponent: opp,
+      scored: parseInt(document.getElementById('f-scored').value) || 0,
+      conceded: parseInt(document.getElementById('f-conceded').value) || 0,
+      goals: parseInt(document.getElementById('f-goals').value) || 0,
+      assists: parseInt(document.getElementById('f-assists').value) || 0,
+      rating: parseFloat(document.getElementById('f-rating').value) || null,
+      shots: parseInt(document.getElementById('f-shots').value) || 0,
+      shotsot: parseInt(document.getElementById('f-shotsot').value) || 0,
+      duels: parseInt(document.getElementById('f-duels').value) || 0,
+      date: new Date().toLocaleDateString('fr-FR')
+    };
+    matches.unshift(m);
+    localStorage.setItem('fb-tracker-matches', JSON.stringify(matches));
+    ['f-opponent','f-scored','f-conceded','f-goals','f-assists','f-rating','f-shots','f-shotsot','f-duels']
+      .forEach(id => document.getElementById(id).value = '');
+    showToast();
+    switchTab('equipe');
+  }
+
+  function deleteMatch(i) {
+    if (!confirm('Supprimer ce match ?')) return;
+    matches.splice(i, 1);
+    localStorage.setItem('fb-tracker-matches', JSON.stringify(matches));
+    renderTeam();
+  }
+
+  function renderTeam() {
+    const wins = matches.filter(m => result(m) === 'win').length;
+    const scored = matches.reduce((a, m) => a + m.scored, 0);
+    const conceded = matches.reduce((a, m) => a + m.conceded, 0);
+    document.getElementById('t-played').textContent = matches.length;
+    document.getElementById('t-wins').textContent = wins;
+    document.getElementById('t-scored').textContent = scored;
+    document.getElementById('t-conceded').textContent = conceded;
+
+    const list = document.getElementById('match-list');
+    if (!matches.length) { list.innerHTML = '<div class="empty">// Aucun match enregistré</div>'; return; }
+
+    list.innerHTML = matches.map((m, i) => {
+      const r = result(m);
+      const bc = r === 'win' ? 'badge-win' : r === 'draw' ? 'badge-draw' : 'badge-loss';
+      const bt = r === 'win' ? 'VICTOIRE' : r === 'draw' ? 'NUL' : 'DÉFAITE';
+      const stats = [];
+      if (m.goals) stats.push(m.goals + ' but' + (m.goals > 1 ? 's' : ''));
+      if (m.assists) stats.push(m.assists + ' passe' + (m.assists > 1 ? 's' : ''));
+      if (m.rating) stats.push('note ' + m.rating);
+      return `<div class="match-item">
+        <div class="match-left">
+          <span class="match-score">${m.scored} — ${m.conceded}</span>
+          <span class="match-opp">vs ${m.opponent}</span>
+          <span class="badge ${bc}">${bt}</span>
+          ${stats.length ? `<div class="my-stats-row">${stats.map(s=>`<span class="my-stat-badge">${s}</span>`).join('')}</div>` : ''}
+        </div>
+        <div class="match-right">
+          <span class="match-date">${m.date}</span>
+          <button class="btn-delete" onclick="deleteMatch(${i})" title="Supprimer">×</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderMy() {
+    const played = matches.length;
+    const goals = matches.reduce((a, m) => a + m.goals, 0);
+    const assists = matches.reduce((a, m) => a + m.assists, 0);
+    const rated = matches.filter(m => m.rating);
+    const avg = rated.length ? (rated.reduce((a, m) => a + m.rating, 0) / rated.length).toFixed(1) : '—';
+    document.getElementById('m-played').textContent = played;
+    document.getElementById('m-goals').textContent = goals;
+    document.getElementById('m-assists').textContent = assists;
+    document.getElementById('m-rating').textContent = avg;
+
+    const bars = document.getElementById('my-bars');
+    if (!matches.length) { bars.innerHTML = '<div class="empty">// Aucun match enregistré</div>'; return; }
+    const last = matches.slice(0, 5).reverse();
+    const maxGoals = Math.max(...last.map(m => m.goals), 1);
+    bars.innerHTML = last.map(m => `
+      <div class="bar-wrap">
+        <div class="bar-header">
+          <span>vs ${m.opponent}</span>
+          <span>${m.goals} but${m.goals > 1 ? 's' : ''} · ${m.assists} passe${m.assists > 1 ? 's' : ''} · ${m.rating ? 'note ' + m.rating : '—'}</span>
+        </div>
+        <div class="bar-bg"><div class="bar-fill" style="width:${Math.round(m.goals / maxGoals * 100)}%"></div></div>
+      </div>
+    `).join('');
+  }
+
+  function showToast() {
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  renderMy();
+</script>
+</body>
+</html>
