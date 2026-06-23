@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculatrice — PROJECT_02</title>
+<meta name="description" content="Calculatrice avancée avec parenthèses, pourcentage et mémoire — projet de pratique JavaScript.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070b16;
+  --grid-line:#10182e;
+  --surface:#0e1428;
+  --surface-2:#141c38;
+  --border:#26305a;
+  --border-soft:#1a2342;
+  --text:#e8ecf8;
+  --text-dim:#717ea8;
+  --text-dimmer:#475078;
+  --blue:#5b9bf5;
+  --violet:#a78bfa;
+  --error:#f87171;
+  --font-display:'Sora',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background-color:var(--bg);
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size:48px 48px;
+  color:var(--text);
+  font-family:var(--font-display);
+  min-height:100vh;
+  padding:48px 20px 64px;
+}
+.page{max-width:880px;margin:0 auto;}
+
+/* en-tête */
+.page-header{
+  display:flex; justify-content:space-between; align-items:flex-start;
+  gap:24px; margin-bottom:36px; flex-wrap:wrap;
+}
+.page-header .titles{display:flex; flex-direction:column; gap:6px;}
+.eyebrow{
+  font-family:var(--font-mono); font-size:.8rem; letter-spacing:.18em;
+  color:var(--violet); text-transform:uppercase;
+}
+.page-header h1{
+  font-size:clamp(2.2rem, 5vw, 3.2rem); font-weight:800; color:var(--blue);
+  margin:0; letter-spacing:-0.02em;
+}
+.back-link{
+  font-family:var(--font-mono); font-size:.85rem; color:var(--text-dim);
+  text-decoration:none; border:1px solid var(--border-soft); border-radius:999px;
+  padding:8px 16px; transition:color .15s, border-color .15s;
+  white-space:nowrap;
+}
+.back-link:hover{color:var(--blue); border-color:var(--blue);}
+
+/* mise en page */
+.app{display:grid; grid-template-columns: 1fr 320px; gap:24px; align-items:start;}
+@media (max-width:760px){ .app{grid-template-columns:1fr;} }
+
+/* calculatrice */
+.calculator{
+  background:var(--surface); border:1px solid var(--border-soft);
+  border-radius:22px; padding:24px;
+}
+
+/* écran */
+.display{
+  background:var(--bg); border:1px solid var(--border-soft); border-radius:16px;
+  padding:22px 20px 18px; margin-bottom:10px; position:relative; overflow:hidden;
+}
+.mem-badge{
+  font-family:var(--font-mono); font-size:.7rem; font-weight:600;
+  color:var(--violet); border:1px solid var(--violet); border-radius:6px;
+  padding:2px 7px; position:absolute; top:14px; left:16px; opacity:0;
+  transition:opacity .2s ease;
+}
+.mem-badge.active{opacity:1;}
+.expr-line{
+  font-family:var(--font-mono); font-size:1.05rem; color:var(--text-dim);
+  white-space:nowrap; overflow-x:auto; text-align:right; padding-bottom:10px;
+  scrollbar-width:none;
+}
+.expr-line::-webkit-scrollbar{display:none;}
+.result-line{
+  font-family:var(--font-mono); font-weight:700; font-size:clamp(2rem,8vw,2.7rem);
+  text-align:right; letter-spacing:-0.02em; line-height:1.1;
+  word-break:break-all; min-height:1.1em;
+}
+.result-line.preview{color:var(--text-dim); opacity:.7;}
+.result-line.error{color:var(--error);}
+@keyframes shake{
+  0%,100%{transform:translateX(0);}
+  20%,60%{transform:translateX(-6px);}
+  40%,80%{transform:translateX(6px);}
+}
+.result-line.shake{animation:shake .3s ease;}
+.hint{
+  font-family:var(--font-mono); font-size:.72rem; color:var(--text-dimmer);
+  text-align:right; margin:2px 4px 18px; letter-spacing:.02em;
+}
+
+/* clavier */
+.keypad{display:grid; grid-template-columns:repeat(4,1fr); gap:10px;}
+.btn{
+  font-family:var(--font-mono); font-size:1.2rem; font-weight:600; color:var(--text);
+  background:var(--surface-2); border:1px solid var(--border); border-radius:13px;
+  padding:18px 0; cursor:pointer; transition:transform .08s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.btn:hover{border-color:var(--blue); box-shadow:0 0 0 1px var(--blue) inset;}
+.btn:active, .btn.pressed{transform:scale(.95);}
+.btn:focus-visible{outline:2px solid var(--blue); outline-offset:2px;}
+.btn.op{color:var(--blue);}
+.btn.mem{font-size:.85rem; color:var(--violet);}
+.btn.muted{color:var(--text-dim);}
+.btn.span2{grid-column:span 2;}
+.btn.equals{
+  background:linear-gradient(135deg, var(--blue), var(--violet));
+  color:#080c18; border:none; font-weight:800; box-shadow:0 10px 30px -12px rgba(91,155,245,.55);
+}
+.btn.equals:hover{filter:brightness(1.07); box-shadow:0 10px 32px -10px rgba(167,139,250,.6);}
+
+/* historique */
+.history-panel{
+  background:var(--surface); border:1px solid var(--border-soft); border-radius:22px;
+  display:flex; flex-direction:column; max-height:600px; overflow:hidden;
+}
+.history-header{
+  display:flex; align-items:center; gap:8px; padding:18px 20px;
+  border-bottom:1px solid var(--border-soft); font-family:var(--font-mono);
+  font-size:.78rem; color:var(--text-dim); letter-spacing:.08em;
+}
+.history-header .dot{
+  width:8px; height:8px; border-radius:50%; background:var(--violet);
+  box-shadow:0 0 10px var(--violet); flex-shrink:0;
+}
+.history-header .clear-history{
+  margin-left:auto; background:none; border:none; color:var(--text-dimmer);
+  font-family:var(--font-mono); font-size:.72rem; cursor:pointer; padding:2px 6px;
+  border-radius:6px; transition:color .15s, background .15s;
+}
+.history-header .clear-history:hover{color:var(--error); background:var(--surface-2);}
+.history-list{
+  list-style:none; margin:0; padding:8px; overflow-y:auto; flex:1;
+  font-family:var(--font-mono); font-size:.82rem; display:flex; flex-direction:column; gap:2px;
+}
+.history-item{
+  display:flex; align-items:baseline; gap:10px; padding:9px 10px; border-radius:8px;
+  color:var(--text-dim); cursor:pointer; transition:background .15s, color .15s;
+}
+.history-item:hover{background:var(--surface-2); color:var(--text);}
+.history-item .line-no{color:var(--text-dimmer); min-width:26px; text-align:right; flex-shrink:0;}
+.history-item .expr{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.history-item .res{color:var(--blue); font-weight:600; flex-shrink:0;}
+.history-empty{
+  color:var(--text-dimmer); font-size:.82rem; text-align:center; padding:32px 20px; line-height:1.6;
+}
+
+@media (max-width:760px){ .history-panel{max-height:280px;} }
+
+/* pied de page */
+.page-footer{
+  margin-top:32px; text-align:center; font-family:var(--font-mono);
+  font-size:.78rem; color:var(--text-dimmer);
+}
+.page-footer a{color:var(--text-dim); text-decoration:none;}
+.page-footer a:hover{color:var(--blue);}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important; transition:none !important;}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="page-header">
+    <div class="titles">
+      <span class="eyebrow">PROJECT_02 — JS_PRACTICE</span>
+      <h1>Calculatrice</h1>
+    </div>
+    <a class="back-link" href="https://cold-dael.github.io/">← cold-dael.github.io</a>
+  </header>
+
+  <main class="app">
+    <section class="calculator" aria-label="Calculatrice">
+      <div class="display">
+        <span class="mem-badge" id="memBadge">M = 0</span>
+        <div class="expr-line" id="exprLine">0</div>
+        <div class="result-line" id="resultLine">0</div>
+      </div>
+      <p class="hint">% = valeur ÷ 100 · clavier : chiffres, + − × ÷ ( ) % Entrée ⌫</p>
+
+      <div class="keypad" id="keypad">
+        <button class="btn mem" data-action="mem-clear">MC</button>
+        <button class="btn mem" data-action="mem-recall">MR</button>
+        <button class="btn mem" data-action="mem-add" data-value="1">M+</button>
+        <button class="btn mem" data-action="mem-add" data-value="-1">M−</button>
+
+        <button class="btn muted" data-action="clear">AC</button>
+        <button class="btn muted" data-action="paren" data-value="(">(</button>
+        <button class="btn muted" data-action="paren" data-value=")">)</button>
+        <button class="btn muted" data-action="percent">%</button>
+
+        <button class="btn" data-action="digit" data-value="7">7</button>
+        <button class="btn" data-action="digit" data-value="8">8</button>
+        <button class="btn" data-action="digit" data-value="9">9</button>
+        <button class="btn op" data-action="operator" data-value="/">÷</button>
+
+        <button class="btn" data-action="digit" data-value="4">4</button>
+        <button class="btn" data-action="digit" data-value="5">5</button>
+        <button class="btn" data-action="digit" data-value="6">6</button>
+        <button class="btn op" data-action="operator" data-value="*">×</button>
+
+        <button class="btn" data-action="digit" data-value="1">1</button>
+        <button class="btn" data-action="digit" data-value="2">2</button>
+        <button class="btn" data-action="digit" data-value="3">3</button>
+        <button class="btn op" data-action="operator" data-value="-">−</button>
+
+        <button class="btn muted" data-action="sign">±</button>
+        <button class="btn" data-action="digit" data-value="0">0</button>
+        <button class="btn" data-action="decimal">,</button>
+        <button class="btn op" data-action="operator" data-value="+">+</button>
+
+        <button class="btn muted span2" data-action="backspace">⌫</button>
+        <button class="btn equals span2" data-action="equals">=</button>
+      </div>
+    </section>
+
+    <aside class="history-panel" aria-label="Historique des calculs">
+      <div class="history-header">
+        <span class="dot"></span>
+        <span>history.log</span>
+        <button class="clear-history" data-action="clear-history">vider</button>
+      </div>
+      <ol class="history-list" id="historyList">
+        <li class="history-empty">Aucun calcul pour l'instant.<br>Tes résultats apparaîtront ici.</li>
+      </ol>
+    </aside>
+  </main>
+
+  <footer class="page-footer">
+    Construit en HTML / CSS / JavaScript — <a href="https://github.com/Cold-Dael" target="_blank" rel="noopener">github.com/Cold-Dael</a>
+  </footer>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ---------------------------------------------------------------------
+  // STATE
+  // ---------------------------------------------------------------------
+  const state = {
+    expr: '',              // expression actuelle, ex: "12+8*(3-1)"
+    memory: 0,              // valeur stockée en mémoire
+    justEvaluated: false,   // true juste après avoir appuyé sur "="
+    history: []             // liste des calculs précédents
+  };
+
+  // ---------------------------------------------------------------------
+  // DOM
+  // ---------------------------------------------------------------------
+  const exprEl = document.getElementById('exprLine');
+  const resultEl = document.getElementById('resultLine');
+  const memBadge = document.getElementById('memBadge');
+  const historyList = document.getElementById('historyList');
+  const keypad = document.getElementById('keypad');
+  const clearHistoryBtn = document.querySelector('[data-action="clear-history"]');
+
+  // ---------------------------------------------------------------------
+  // TOKENIZER — transforme "12+8*(3-1)" en une liste de tokens
+  // ---------------------------------------------------------------------
+  function tokenize(str) {
+    const tokens = [];
+    let i = 0;
+    while (i < str.length) {
+      const ch = str[i];
+      if (/[0-9.]/.test(ch)) {
+        let j = i;
+        while (j < str.length && /[0-9.]/.test(str[j])) j++;
+        tokens.push({ type: 'num', value: parseFloat(str.slice(i, j)) });
+        i = j;
+        continue;
+      }
+      switch (ch) {
+        case '+': tokens.push({ type: 'add' }); break;
+        case '-': tokens.push({ type: 'sub' }); break;
+        case '*': tokens.push({ type: 'mul' }); break;
+        case '/': tokens.push({ type: 'div' }); break;
+        case '(': tokens.push({ type: 'lparen' }); break;
+        case ')': tokens.push({ type: 'rparen' }); break;
+        case '%': tokens.push({ type: 'pct' }); break;
+        default: break;
+      }
+      i++;
+    }
+    return tokens;
+  }
+
+  // ---------------------------------------------------------------------
+  // PARSER — analyse récursive descendante respectant les priorités :
+  // ( ) > % (postfix) > +/- unaire > * / > + -
+  // Bonus : multiplication implicite, ex. "2(3+4)" ou "(2)(3)"
+  // ---------------------------------------------------------------------
+  class Parser {
+    constructor(tokens) { this.tokens = tokens; this.pos = 0; }
+    peek() { return this.tokens[this.pos]; }
+    next() { return this.tokens[this.pos++]; }
+
+    parseExpression() {
+      let node = this.parseTerm();
+      while (this.peek() && (this.peek().type === 'add' || this.peek().type === 'sub')) {
+        const op = this.next().type;
+        node = { type: op, left: node, right: this.parseTerm() };
+      }
+      return node;
+    }
+
+    parseTerm() {
+      let node = this.parseUnary();
+      while (this.peek() && (
+        this.peek().type === 'mul' || this.peek().type === 'div' ||
+        this.peek().type === 'num' || this.peek().type === 'lparen'
+      )) {
+        let op = 'mul'; // multiplication implicite par défaut
+        if (this.peek().type === 'mul' || this.peek().type === 'div') op = this.next().type;
+        node = { type: op, left: node, right: this.parseUnary() };
+      }
+      return node;
+    }
+
+    parseUnary() {
+      if (this.peek() && (this.peek().type === 'add' || this.peek().type === 'sub')) {
+        const op = this.next().type;
+        return { type: 'neg', operand: this.parseUnary(), negate: op === 'sub' };
+      }
+      return this.parsePostfix();
+    }
+
+    parsePostfix() {
+      let node = this.parsePrimary();
+      while (this.peek() && this.peek().type === 'pct') {
+        this.next();
+        node = { type: 'pct', operand: node };
+      }
+      return node;
+    }
+
+    parsePrimary() {
+      const tok = this.peek();
+      if (!tok) throw new Error('Expression incomplète');
+      if (tok.type === 'num') { this.next(); return { type: 'num', value: tok.value }; }
+      if (tok.type === 'lparen') {
+        this.next();
+        const node = this.parseExpression();
+        if (!this.peek() || this.peek().type !== 'rparen') throw new Error('Parenthèse manquante');
+        this.next();
+        return node;
+      }
+      throw new Error('Expression invalide');
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // EVALUATOR
+  // ---------------------------------------------------------------------
+  function evaluate(node) {
+    switch (node.type) {
+      case 'num': return node.value;
+      case 'add': return evaluate(node.left) + evaluate(node.right);
+      case 'sub': return evaluate(node.left) - evaluate(node.right);
+      case 'mul': return evaluate(node.left) * evaluate(node.right);
+      case 'div': {
+        const r = evaluate(node.right);
+        if (r === 0) throw new Error('Division par zéro');
+        return evaluate(node.left) / r;
+      }
+      case 'neg': {
+        const v = evaluate(node.operand);
+        return node.negate ? -v : v;
+      }
+      case 'pct': return evaluate(node.operand) / 100;
+      default: throw new Error('Noeud inconnu');
+    }
+  }
+
+  function calculate(str) {
+    const tokens = tokenize(str);
+    if (!tokens.length) return 0;
+    const parser = new Parser(tokens);
+    const ast = parser.parseExpression();
+    if (parser.pos !== tokens.length) throw new Error('Expression invalide');
+    return evaluate(ast);
+  }
+
+  // ---------------------------------------------------------------------
+  // FORMATAGE
+  // ---------------------------------------------------------------------
+
+  // Pour l'aperçu : ferme les parenthèses ouvertes et retire les
+  // opérateurs / parenthèses ouvrantes en attente d'opérande.
+  function getPreviewExpr(expr) {
+    let e = expr;
+    while (e.length && /[+\-*/(]$/.test(e)) e = e.slice(0, -1);
+    if (!e) return '';
+    let open = 0;
+    for (const ch of e) {
+      if (ch === '(') open++;
+      else if (ch === ')') open--;
+    }
+    while (open > 0) { e += ')'; open--; }
+    return e;
+  }
+
+  // Expression interne -> affichage lisible (×, ÷, −, virgule décimale)
+  function formatExprDisplay(expr) {
+    return expr
+      .replace(/\*/g, ' × ')
+      .replace(/\//g, ' ÷ ')
+      .replace(/\+/g, ' + ')
+      .replace(/-/g, ' − ')
+      .replace(/%/g, ' % ')
+      .replace(/\(/g, ' ( ')
+      .replace(/\)/g, ' ) ')
+      .replace(/\./g, ',')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  // Résultat -> affichage formaté (séparateur français)
+  function formatResult(n) {
+    if (!isFinite(n)) return 'Erreur';
+    let rounded = Math.round(n * 1e10) / 1e10;
+    if (Object.is(rounded, -0)) rounded = 0;
+    if (rounded !== 0 && (Math.abs(rounded) >= 1e15 || Math.abs(rounded) < 1e-9)) {
+      return rounded.toExponential(6)
+        .replace('e+', ' × 10^')
+        .replace('e-', ' × 10^−');
+    }
+    const isNeg = rounded < 0;
+    const abs = Math.abs(rounded);
+    const parts = abs.toString().split('.');
+    let out = Number(parts[0]).toLocaleString('fr-FR');
+    if (parts[1]) out += ',' + parts[1];
+    return (isNeg ? '−' : '') + out;
+  }
+
+  // Nombre -> chaîne réutilisable dans l'expression (point décimal)
+  function numToExprString(n) {
+    if (!isFinite(n)) return '0';
+    let rounded = Math.round(n * 1e10) / 1e10;
+    if (Object.is(rounded, -0)) rounded = 0;
+    let s = rounded.toString();
+    if (s.includes('e')) s = rounded.toFixed(10).replace(/0+$/, '').replace(/\.$/, '');
+    return s;
+  }
+
+  // Valeur courante (pour la mémoire), basée sur l'aperçu
+  function getCurrentValue() {
+    try {
+      const preview = getPreviewExpr(state.expr);
+      if (!preview) return 0;
+      const val = calculate(preview);
+      return isFinite(val) ? val : 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // ACTIONS
+  // ---------------------------------------------------------------------
+  function appendDigit(d) {
+    if (state.justEvaluated) {
+      state.expr = d;
+      state.justEvaluated = false;
+      render(); return;
+    }
+    const trailing = state.expr.match(/[0-9.]*$/)[0];
+    if (trailing === '0') state.expr = state.expr.slice(0, -1) + d;
+    else state.expr += d;
+    render();
+  }
+
+  function appendDecimal() {
+    if (state.justEvaluated) {
+      state.expr = '0.';
+      state.justEvaluated = false;
+      render(); return;
+    }
+    const trailing = state.expr.match(/[0-9.]*$/)[0];
+    if (trailing.includes('.')) return;
+    state.expr += (trailing === '' ? '0.' : '.');
+    render();
+  }
+
+  function appendOperator(op) {
+    if (state.expr === '') {
+      if (op === '-') { state.expr = '-'; render(); }
+      return;
+    }
+    if (state.justEvaluated) state.justEvaluated = false;
+    const last = state.expr[state.expr.length - 1];
+    if ('+-*/'.includes(last)) state.expr = state.expr.slice(0, -1) + op;
+    else state.expr += op;
+    render();
+  }
+
+  function appendParen(p) {
+    if (state.justEvaluated) {
+      if (p !== '(') return;
+      state.expr = '(';
+      state.justEvaluated = false;
+      render(); return;
+    }
+    if (p === ')') {
+      const open = (state.expr.match(/\(/g) || []).length;
+      const close = (state.expr.match(/\)/g) || []).length;
+      const last = state.expr[state.expr.length - 1];
+      if (open <= close) return;
+      if (!last || last === '(' || '+-*/'.includes(last)) return;
+    }
+    state.expr += p;
+    render();
+  }
+
+  function appendPercent() {
+    if (state.justEvaluated) return;
+    const last = state.expr[state.expr.length - 1];
+    if (!last || !/[0-9)%]/.test(last)) return;
+    state.expr += '%';
+    render();
+  }
+
+  function toggleSign() {
+    if (state.justEvaluated) {
+      state.expr = numToExprString(-Number(state.expr));
+      render(); return;
+    }
+    const m = state.expr.match(/(-?\d*\.?\d+)$/);
+    if (!m) return;
+    const seg = m[0], idx = m.index;
+    if (seg.startsWith('-')) state.expr = state.expr.slice(0, idx) + seg.slice(1);
+    else state.expr = state.expr.slice(0, idx) + '-' + seg;
+    render();
+  }
+
+  function backspace() {
+    if (state.justEvaluated) { clearAll(); return; }
+    state.expr = state.expr.slice(0, -1);
+    render();
+  }
+
+  function clearAll() {
+    state.expr = '';
+    state.justEvaluated = false;
+    render();
+  }
+
+  function memoryAdd(sign) {
+    state.memory += sign * getCurrentValue();
+    render();
+  }
+
+  function memoryRecall() {
+    const memStr = numToExprString(state.memory);
+    if (state.expr === '' || state.justEvaluated) {
+      state.expr = memStr;
+      state.justEvaluated = false;
+    } else {
+      const last = state.expr[state.expr.length - 1];
+      state.expr += ('+-*/('.includes(last) ? memStr : '*' + memStr);
+    }
+    render();
+  }
+
+  function memoryClear() {
+    state.memory = 0;
+    render();
+  }
+
+  function doEquals() {
+    const preview = getPreviewExpr(state.expr);
+    if (!preview) { triggerError(); return; }
+    let result;
+    try {
+      result = calculate(preview);
+      if (!isFinite(result)) throw new Error('Erreur');
+    } catch (e) {
+      triggerError();
+      return;
+    }
+    addHistory(state.expr, result);
+    state.expr = numToExprString(result);
+    state.justEvaluated = true;
+    render();
+  }
+
+  function triggerError() {
+    resultEl.textContent = 'Erreur';
+    resultEl.classList.remove('preview');
+    resultEl.classList.add('error', 'shake');
+    setTimeout(() => resultEl.classList.remove('shake'), 300);
+  }
+
+  // ---------------------------------------------------------------------
+  // HISTORIQUE
+  // ---------------------------------------------------------------------
+  function addHistory(expr, result) {
+    state.history.unshift({ expr: formatExprDisplay(expr), result: formatResult(result), raw: result });
+    if (state.history.length > 50) state.history.pop();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    if (!state.history.length) {
+      historyList.innerHTML = "<li class=\"history-empty\">Aucun calcul pour l'instant.<br>Tes résultats apparaîtront ici.</li>";
+      return;
+    }
+    historyList.innerHTML = state.history.map((h, i) => {
+      const lineNo = String(state.history.length - i).padStart(3, '0');
+      return `<li class="history-item" data-index="${i}" tabindex="0">` +
+        `<span class="line-no">${lineNo}</span>` +
+        `<span class="expr">${h.expr} =</span>` +
+        `<span class="res">${h.result}</span>` +
+        `</li>`;
+    }).join('');
+  }
+
+  function useHistoryEntry(idx) {
+    const entry = state.history[idx];
+    if (!entry) return;
+    const insert = numToExprString(entry.raw);
+    if (state.expr === '' || state.justEvaluated) {
+      state.expr = insert;
+      state.justEvaluated = false;
+    } else {
+      const last = state.expr[state.expr.length - 1];
+      state.expr += ('+-*/('.includes(last) ? insert : '*' + insert);
+    }
+    render();
+  }
+
+  // ---------------------------------------------------------------------
+  // RENDU
+  // ---------------------------------------------------------------------
+  function render() {
+    exprEl.textContent = state.expr ? formatExprDisplay(state.expr) : '0';
+
+    let display = '0';
+    let isError = false;
+    let isPreview = false;
+
+    if (state.justEvaluated) {
+      display = formatResult(Number(state.expr));
+    } else if (state.expr === '') {
+      display = '0';
+    } else {
+      isPreview = true;
+      const preview = getPreviewExpr(state.expr);
+      if (preview) {
+        try {
+          const val = calculate(preview);
+          if (!isFinite(val)) { isError = true; display = 'Erreur'; }
+          else display = formatResult(val);
+        } catch (e) {
+          display = '…';
+        }
+      } else {
+        display = '0';
+      }
+    }
+
+    resultEl.textContent = display;
+    resultEl.classList.toggle('error', isError);
+    resultEl.classList.toggle('preview', isPreview && !isError);
+
+    memBadge.classList.toggle('active', state.memory !== 0);
+    memBadge.textContent = 'M = ' + formatResult(state.memory);
+
+    exprEl.scrollLeft = exprEl.scrollWidth;
+  }
+
+  // ---------------------------------------------------------------------
+  // ÉVÉNEMENTS
+  // ---------------------------------------------------------------------
+  function handleAction(action, value) {
+    switch (action) {
+      case 'digit': appendDigit(value); break;
+      case 'decimal': appendDecimal(); break;
+      case 'operator': appendOperator(value); break;
+      case 'paren': appendParen(value); break;
+      case 'percent': appendPercent(); break;
+      case 'sign': toggleSign(); break;
+      case 'clear': clearAll(); break;
+      case 'backspace': backspace(); break;
+      case 'equals': doEquals(); break;
+      case 'mem-add': memoryAdd(Number(value)); break;
+      case 'mem-recall': memoryRecall(); break;
+      case 'mem-clear': memoryClear(); break;
+      default: break;
+    }
+  }
+
+  keypad.addEventListener('click', e => {
+    const btn = e.target.closest('.btn');
+    if (!btn) return;
+    handleAction(btn.dataset.action, btn.dataset.value);
+  });
+
+  historyList.addEventListener('click', e => {
+    const item = e.target.closest('.history-item');
+    if (!item) return;
+    useHistoryEntry(Number(item.dataset.index));
+  });
+
+  historyList.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const item = e.target.closest('.history-item');
+    if (!item) return;
+    e.preventDefault();
+    useHistoryEntry(Number(item.dataset.index));
+  });
+
+  clearHistoryBtn.addEventListener('click', () => {
+    state.history = [];
+    renderHistory();
+  });
+
+  // Mappage clavier -> sélecteur de bouton (pour le retour visuel)
+  const keyMap = {
+    '+': '[data-action="operator"][data-value="+"]',
+    '-': '[data-action="operator"][data-value="-"]',
+    '*': '[data-action="operator"][data-value="*"]',
+    '/': '[data-action="operator"][data-value="/"]',
+    '(': '[data-action="paren"][data-value="("]',
+    ')': '[data-action="paren"][data-value=")"]',
+    '%': '[data-action="percent"]',
+    'Enter': '[data-action="equals"]',
+    '=': '[data-action="equals"]',
+    'Backspace': '[data-action="backspace"]',
+    'Escape': '[data-action="clear"]',
+    '.': '[data-action="decimal"]',
+    ',': '[data-action="decimal"]'
+  };
+  for (let d = 0; d <= 9; d++) keyMap[String(d)] = `[data-action="digit"][data-value="${d}"]`;
+
+  function flash(selector) {
+    const btn = keypad.querySelector(selector);
+    if (!btn) return;
+    btn.classList.add('pressed');
+    setTimeout(() => btn.classList.remove('pressed'), 110);
+  }
+
+  document.addEventListener('keydown', e => {
+    const k = e.key;
+    if (/^[0-9]$/.test(k)) { appendDigit(k); flash(keyMap[k]); e.preventDefault(); return; }
+    if (!(k in keyMap)) return;
+    switch (k) {
+      case '.': case ',': appendDecimal(); break;
+      case '+': appendOperator('+'); break;
+      case '-': appendOperator('-'); break;
+      case '*': appendOperator('*'); break;
+      case '/': appendOperator('/'); break;
+      case '(': appendParen('('); break;
+      case ')': appendParen(')'); break;
+      case '%': appendPercent(); break;
+      case 'Enter': case '=': doEquals(); break;
+      case 'Backspace': backspace(); break;
+      case 'Escape': clearAll(); break;
+      default: return;
+    }
+    flash(keyMap[k]);
+    e.preventDefault();
+  });
+
+  // ---------------------------------------------------------------------
+  // INITIALISATION
+  // ---------------------------------------------------------------------
+  render();
+})();
+</script>
+</body>
+</html>
